@@ -2,10 +2,12 @@
 unit tests for the libvirt_events engine
 """
 
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
 import pytest
 
-import salt.engines.libvirt_events as libvirt_events
-from tests.support.mock import MagicMock, patch
+from saltext.libvirt_events.engines import libvirt_events
 
 
 @pytest.fixture
@@ -13,9 +15,12 @@ def configure_loader_modules():
     return {libvirt_events: {}}
 
 
+setattr(configure_loader_modules, "_pytestfixturefunction", True)
+
+
 @pytest.fixture
 def mock_libvirt():
-    with patch("salt.engines.libvirt_events.libvirt") as mock_libvirt:
+    with patch("saltext.libvirt_events.engines.libvirt_events.libvirt") as mock_libvirt:
         mock_libvirt.getVersion.return_value = 2000000
         mock_libvirt.virEventRunDefaultImpl.return_value = -1  # Don't loop for ever
         mock_libvirt.VIR_DOMAIN_EVENT_ID_LIFECYCLE = 0
@@ -137,10 +142,7 @@ def test_event_register(mock_libvirt):
     )
 
     # Check that the default 'all' filter actually worked
-    counts = {
-        obj: len(callback_def)
-        for obj, callback_def in libvirt_events.CALLBACK_DEFS.items()
-    }
+    counts = {obj: len(callback_def) for obj, callback_def in libvirt_events.CALLBACK_DEFS.items()}
     for obj, count in counts.items():
         register = libvirt_events.REGISTER_FUNCTIONS[obj]
         assert getattr(mock_cnx, register).call_count == count

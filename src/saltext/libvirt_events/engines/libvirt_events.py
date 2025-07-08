@@ -158,21 +158,15 @@ def _get_libvirt_enum_string(prefix, value):
     :param prefix: start of the libvirt attribute to look for.
     :param value: integer to convert to string
     """
-    attributes = [
-        attr[len(prefix) :] for attr in libvirt.__dict__ if attr.startswith(prefix)
-    ]
+    attributes = [attr[len(prefix) :] for attr in libvirt.__dict__ if attr.startswith(prefix)]
 
     # Filter out the values starting with a common base as they match another enum
     prefixes = [_compute_subprefix(p) for p in attributes]
     counts = {p: prefixes.count(p) for p in prefixes}
     sub_prefixes = [
-        p
-        for p, count in counts.items()
-        if count > 1 or (p.endswith("_") and p[:-1] in prefixes)
+        p for p, count in counts.items() if count > 1 or (p.endswith("_") and p[:-1] in prefixes)
     ]
-    filtered = [
-        attr for attr in attributes if _compute_subprefix(attr) not in sub_prefixes
-    ]
+    filtered = [attr for attr in attributes if _compute_subprefix(attr) not in sub_prefixes]
 
     for candidate in filtered:
         if value == getattr(libvirt, "".join((prefix, candidate))):
@@ -228,9 +222,7 @@ def _salt_send_event(opaque, conn, data):
 
     # Actually send the event in salt
     if __opts__.get("__role") == "master":
-        salt.utils.event.get_master_event(__opts__, __opts__["sock_dir"]).fire_event(
-            all_data, tag
-        )
+        salt.utils.event.get_master_event(__opts__, __opts__["sock_dir"]).fire_event(all_data, tag)
     else:
         __salt__["event.send"](tag, all_data)
 
@@ -284,9 +276,7 @@ def _domain_event_rtc_change_cb(conn, domain, utcoffset, opaque):
     """
     Domain RTC change events handler
     """
-    _salt_send_domain_event(
-        opaque, conn, domain, opaque["event"], {"utcoffset": utcoffset}
-    )
+    _salt_send_domain_event(opaque, conn, domain, opaque["event"], {"utcoffset": utcoffset})
 
 
 def _domain_event_watchdog_cb(conn, domain, action, opaque):
@@ -320,9 +310,7 @@ def _domain_event_io_error_cb(conn, domain, srcpath, devalias, action, reason, o
     )
 
 
-def _domain_event_graphics_cb(
-    conn, domain, phase, local, remote, auth, subject, opaque
-):
+def _domain_event_graphics_cb(conn, domain, phase, local, remote, auth, subject, opaque):
     """
     Domain graphics events handler
     """
@@ -492,9 +480,7 @@ def _domain_event_migration_iteration_cb(conn, domain, iteration, opaque):
     """
     Domain migration iteration events handler
     """
-    _salt_send_domain_event(
-        opaque, conn, domain, opaque["event"], {"iteration": iteration}
-    )
+    _salt_send_domain_event(opaque, conn, domain, opaque["event"], {"iteration": iteration})
 
 
 def _domain_event_job_completed_cb(conn, domain, params, opaque):
@@ -527,9 +513,7 @@ def _domain_event_metadata_change_cb(conn, domain, mtype, nsuri, opaque):
     )
 
 
-def _domain_event_block_threshold_cb(
-    conn, domain, dev, path, threshold, excess, opaque
-):
+def _domain_event_block_threshold_cb(conn, domain, dev, path, threshold, excess, opaque):
     """
     Domain block threshold events handler
     """
@@ -606,9 +590,7 @@ def _nodedev_event_update_cb(conn, dev, opaque):
     """
     Node device update events handler
     """
-    _salt_send_event(
-        opaque, conn, {"nodedev": {"name": dev.name()}, "event": opaque["event"]}
-    )
+    _salt_send_event(opaque, conn, {"nodedev": {"name": dev.name()}, "event": opaque["event"]})
 
 
 def _secret_event_lifecycle_cb(conn, secret, event, detail, opaque):
@@ -738,11 +720,7 @@ def start(uri=None, tag_prefix="salt/engines/libvirt_events", filters=None):
         for obj, event_defs in CALLBACK_DEFS.items():
             for event, real_id in event_defs:
                 event_filter = "/".join((obj, event))
-                if (
-                    event_filter not in filters
-                    and obj not in filters
-                    and not all_filters
-                ):
+                if event_filter not in filters and obj not in filters and not all_filters:
                     continue
                 registered_id = _register_callback(cnx, tag_prefix, obj, event, real_id)
                 if registered_id:
